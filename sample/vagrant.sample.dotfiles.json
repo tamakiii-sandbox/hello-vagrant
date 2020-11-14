@@ -1,0 +1,8 @@
+{
+  "synced_folder": [
+    {
+      "host": "./sample/dotfiles",
+      "guest": "/home/vagrant/dotfiles"
+    }
+  ]
+}

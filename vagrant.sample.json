@@ -1,0 +1,21 @@
+{
+  "virtualbox": {
+    "memory": 2048
+  },
+  "synced_folder": [
+    {
+      "host": ".",
+      "guest": "/usr/vagrant/shared",
+      "owner": "vagrant",
+      "group": "vagrant"
+    }
+  ],
+  "network": [
+    {
+      "host": 80,
+      "guest": 8080,
+      "type": "forwarded_port",
+      "host_ip": "0.0.0.0"
+    }
+  ]
+}

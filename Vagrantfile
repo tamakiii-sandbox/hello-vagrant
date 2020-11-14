@@ -2,10 +2,9 @@
 # vi: set ft=ruby :
 # frozen_string_literal: true
 
-HOST_PORT = (ENV['HOST_PORT'] || 8080).to_i
-VM_MEMORY = (ENV['VM_MEMORY'] || 2048).to_i
-SYNCED_FOLDER = ENV['SYNCED_FOLDER'] || '.'
-SYNCED_FOLDER_GUEST = ENV['SYNCED_FOLDER_GUEST'] || '/usr/vagrant/shared'
+require 'json'
+
+json = JSON.load(File.open(ENV['JSON_FILE'] || 'vagrant.json'))
 
 # All Vagrant configuration is done below. The "2" in Vagrant.configure
 # configures the configuration version (we support older styles for
@@ -29,7 +28,12 @@ Vagrant.configure('2') do |config|
   # within the machine from a port on the host machine. In the example below,
   # accessing "localhost:8080" will access port 80 on the guest machine.
   # NOTE: This will enable public access to the opened port
-  config.vm.network 'forwarded_port', guest: 80, host: HOST_PORT
+  # config.vm.network 'forwarded_port', guest: 80, host: HOST_PORT
+  json['network']&.each do |conf|
+    type = conf['type'] || 'forwarded_port'
+    host_ip = conf['host_ip'] || '0.0.0.0'
+    config.vm.network type, guest: conf['guest'], host: conf['host'], host_ip: host_ip
+  end
 
   # Create a forwarded port mapping which allows access to a specific port
   # within the machine from a port on the host machine and only allow access
@@ -49,7 +53,11 @@ Vagrant.configure('2') do |config|
   # the path on the host to the actual folder. The second argument is
   # the path on the guest to mount the folder. And the optional third
   # argument is a set of non-required options.
-  config.vm.synced_folder SYNCED_FOLDER, SYNCED_FOLDER_GUEST, owner: 'vagrant', group: 'vagrant'
+  json['synced_folder']&.each do |conf|
+    owner = conf['owner'] || 'vagrant'
+    group = conf['group'] || 'vagrant'
+    config.vm.synced_folder conf['host'], conf['guest'], owner: owner, group: group
+  end
 
   # Provider-specific configuration so you can fine-tune various
   # backing providers for Vagrant. These expose provider-specific options.
@@ -59,7 +67,7 @@ Vagrant.configure('2') do |config|
     vb.gui = false
 
     # Customize the amount of memory on the VM:
-    vb.memory = VM_MEMORY
+    vb.memory = (json['virtualbox']['memory'] || 2048).to_i
   end
 
   # View the documentation for the provider you are using for more
@@ -75,5 +83,11 @@ Vagrant.configure('2') do |config|
     make -C /tmp/install install
     make -C /tmp/install test
     rm -rf /tmp/install
+  SHELL
+
+  config.vm.provision 'shell', inline: <<-SHELL
+    set -ex
+    test -f /home/vagrant/dotfiles/install.sh && $_ || true
+    test -f /home/vagrant/dotfiles/Makefile && make -C $(dirname $_) install test || true
   SHELL
 end

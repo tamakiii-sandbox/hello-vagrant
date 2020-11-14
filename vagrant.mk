@@ -5,19 +5,36 @@ help:
 
 setup: \
 	dependencies \
-	Vagrantfile
+	Vagrantfile \
+	vagrant.json \
+	validate
 
 dependencies:
-	command -v vagrant
-	command -v ruby
+	type vagrant
+	type ruby
+	type virtualbox
 
-install:
-	vagrant up
-	vagrant provision
+install: Vagrantfile vagrant.json
+	vagrant up --provision
 	vagrant halt # docker without sudo
 
 Vagrantfile:
 	vagrant init
 
+vagrant.json: vagrant.sample.json
+	cp $< $@
+
+validate:
+	vagrant validate
+
+deps/$(shell id -un)/dotfiles: deps
+	[ ! -d $@ ] \
+		&& git clone git@github.com:$(shell id -un)/dotfiles.git $@ \
+		|| (git -C $@ fetch -p && git -C $@ pull origin $$(git -C $@ symbolic-ref --short HEAD))
+
+deps:
+	test -d $@ || mkdir $@
+
 clean:
 	vagrant destroy --force
+	rm vagrant.json

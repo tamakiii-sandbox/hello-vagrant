@@ -1,12 +1,12 @@
 .PHONY: help setup dependencies install test clean
 .PHONY: install-deps install-docker install-docker-compose
+.PHONY: apt-update
 
 help:
 	@cat $(firstword $(MAKEFILE_LIST))
 
 setup: \
-	dependencies \
-	trusted.gpg
+	dependencies
 
 dependencies:
 	which apt
@@ -50,6 +50,9 @@ install-docker:
 install-docker-compose:
 	curl -sL "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$$(uname -s)-$$(uname -m)" -o /usr/local/bin/docker-compose
 	chmod +x /usr/local/bin/docker-compose
+
+apt-update:
+	apt-get update
 
 add-to-docker-group:
 	gpasswd -a vagrant docker
