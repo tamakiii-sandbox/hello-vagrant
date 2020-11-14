@@ -2,13 +2,6 @@
 # vi: set ft=ruby :
 # frozen_string_literal: true
 
-HOST_PORT_HTTP = (ENV['HOST_PORT_HTTP'] || 80).to_i
-HOST_PORT_HTTPS = (ENV['HOST_PORT_HTTPS'] || 443).to_i
-HOST_PORT_MYSQL = (ENV['HOST_PORT_MYSQL'] || 3306).to_i
-VM_MEMORY = (ENV['VM_MEMORY'] || 2048).to_i
-SYNCED_FOLDER = ENV['SYNCED_FOLDER'] || '.'
-SYNCED_FOLDER_GUEST = ENV['SYNCED_FOLDER_GUEST'] || '/mnt/shared'
-
 # All Vagrant configuration is done below. The "2" in Vagrant.configure
 # configures the configuration version (we support older styles for
 # backwards compatibility). Please don't change it unless you know what
@@ -17,6 +10,14 @@ Vagrant.configure('2') do |config|
   # The most common configuration options are documented and commented below.
   # For a complete reference, please see the online documentation at
   # https://docs.vagrantup.com.
+  config.env.enable
+
+  HOST_PORT_HTTP = (ENV['HOST_PORT_HTTP'] || 80).to_i
+  HOST_PORT_HTTPS = (ENV['HOST_PORT_HTTPS'] || 443).to_i
+  HOST_PORT_MYSQL = (ENV['HOST_PORT_MYSQL'] || 3306).to_i
+  VM_MEMORY = (ENV['VM_MEMORY'] || 2048).to_i
+  SYNCED_FOLDER = ENV['SYNCED_FOLDER'] || '.'
+  SYNCED_FOLDER_GUEST = ENV['SYNCED_FOLDER_GUEST'] || '/mnt/shared'
 
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://vagrantcloud.com/search.
@@ -72,9 +73,6 @@ Vagrant.configure('2') do |config|
   config.vm.provision 'shell', inline: 'rm -rf /home/vagrant/dotfiles'
   config.vm.provision 'file', source: './deps/dotfiles', destination: '/home/vagrant/dotfiles'
 
-  # config.vm.provision 'shell', inline: 'mv /tmp/dotfiles /home/vagrant/dotfiles'
-  # config.vm.provision 'file', source: './deps/dotfiles', destination: '/tmp/dotfiles'
-
   # Enable provisioning with a shell script. Additional provisioners such as
   # Ansible, Chef, Docker, Puppet and Salt are also available. Please see the
   # documentation for more information about their specific syntax and use.
@@ -88,12 +86,12 @@ Vagrant.configure('2') do |config|
   SHELL
 
   config.vm.provision 'shell', inline: <<-SHELL
+    git config --global github.accesstoken #{ENV['GITHUB_PERSONAL_ACCESS_TOKEN']}
+  SHELL
+
+  config.vm.provision 'shell', inline: <<-SHELL
     set -ex
     test -f /home/vagrant/dotfiles/install.sh && sudo -i -u vagrant $_ || true
     test -f /home/vagrant/dotfiles/Makefile && sudo -i -u vagrant make -C $(dirname $_) install test || true
   SHELL
-
-  # config.vm.provision 'shell', inline: <<-SHELL
-  #   git config --global github.accesstoken
-  # SHELL
 end
