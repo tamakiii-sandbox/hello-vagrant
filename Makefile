@@ -8,7 +8,6 @@ help:
 setup: \
 	dependencies \
 	Vagrantfile \
-	deps/dotfiles \
 	.env \
 	validate
 
@@ -37,12 +36,6 @@ validate:
 	echo "SYNCED_FOLDER=." >> $@
 	echo "SYNCED_FOLDER_GUEST=/mnt/shared" >> $@
 	echo "GITHUB_PERSONAL_ACCESS_TOKEN=" >> $@
-
-deps/dotfiles: deps
-	[ ! -e $@ ] && (test -e ~/dotfiles && ln -sfnv ~/dotfiles $@ || mkdir $@)
-
-deps:
-	test -d $@ || mkdir $@
 
 clean:
 	rm -rf deps

@@ -70,8 +70,10 @@ Vagrant.configure('2') do |config|
 
   # View the documentation for the provider you are using for more
   # information on available options.
-  config.vm.provision 'shell', inline: 'rm -rf /home/vagrant/dotfiles'
-  config.vm.provision 'file', source: './deps/dotfiles', destination: '/home/vagrant/dotfiles'
+  if File.file?('~/dotfiles') do
+    config.vm.provision 'shell', inline: 'rm -rf /home/vagrant/dotfiles'
+    config.vm.provision 'file', source: '~/dotfiles', destination: '/home/vagrant/dotfiles'
+  end
 
   # Enable provisioning with a shell script. Additional provisioners such as
   # Ansible, Chef, Docker, Puppet and Salt are also available. Please see the
