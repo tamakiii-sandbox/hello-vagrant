@@ -8,7 +8,8 @@
       "communicator": "ssh",
       "source_path": "hashicorp/bionic64",
       "provider": "virtualbox",
-      "add_force": true
+      "add_force": false,
+      "skip_add": true
     }
   ],
   "provisioners": [
