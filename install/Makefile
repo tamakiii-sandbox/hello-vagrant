@@ -1,5 +1,6 @@
 .PHONY: help setup dependencies install test clean
-.PHONY: install-deps install-docker install-docker-compose
+.PHONY: install-deps install-locales install-docker-repo install-docker install-docker-compose
+.PHONY: apt-update add-to-docker-group apt-clean
 
 help:
 	@cat $(firstword $(MAKEFILE_LIST))
@@ -12,7 +13,12 @@ dependencies:
 	which lsb_release
 
 install: \
+	apt-update \
 	install-deps \
+	install-locales \
+	install-utilities \
+	install-docker-repo \
+	apt-update \
 	install-docker \
 	install-docker-compose \
 	add-to-docker-group
@@ -23,28 +29,44 @@ test:
 	cat /etc/apt/sources.list | grep -F 'deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable' | grep -E '^deb'
 	id vagrant | grep "$$(cat /etc/group | grep '^docker:' | awk -F: '{print $$3}')(docker)"
 
-install-deps: /var/cache/apt
+apt-update:
 	apt-get update
+
+apt-clean:
+	apt-get clean
+	rm -rf /var/lib/apt/lists/*
+
+install-deps:
 	apt-get install -y --no-install-recommends \
 		ca-certificates \
 		software-properties-common \
 		apt-transport-https \
 		gnupg-agent \
 		curl
-	apt-get clean
-	rm -rf /var/lib/apt/lists/*
 
-install-docker: /var/cache/apt
+install-locales:
+	apt-get install -y --no-install-recommends locales
+	echo "ja_JP.UTF-8 UTF-8" > /etc/locale.gen
+	echo "en_US.UTF-8 UTF-8" > /etc/locale.gen
+	locale-gen ja_JP.UTF-8
+	locale-gen en_US.UTF-8
+
+install-utilities:
+	apt-get install -y --no-install-recommends \
+		zsh \
+		fish \
+		tcsh
+
+install-docker-repo:
 	curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
 	apt-key fingerprint 0EBFCD88
 	add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $$(lsb_release -cs) stable"
-	apt-get update
+
+install-docker:
 	apt-get install -y --no-install-recommends \
 		docker-ce \
 		docker-ce-cli \
 		containerd.io
-	apt-get clean
-	rm -rf /var/lib/apt/lists/*
 
 install-docker-compose: \
 	/usr/local/bin/docker-compose

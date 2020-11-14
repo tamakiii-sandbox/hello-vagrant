@@ -1,8 +1,0 @@
-{
-  "provision": [
-    {
-      "source": "./sample/dotfiles",
-      "destination": "/home/vagrant/dotfiles"
-    }
-  ]
-}

@@ -1,12 +1,14 @@
 .PHONY: help setup dependencies install validate clean
 
+UNAME ?= $(shell id -un)
+
 help:
 	@cat $(firstword $(MAKEFILE_LIST))
 
 setup: \
 	dependencies \
 	Vagrantfile \
-	vagrant.json \
+	deps/dotfiles \
 	validate
 
 dependencies:
@@ -14,27 +16,25 @@ dependencies:
 	type ruby
 	type virtualbox
 
-install: Vagrantfile vagrant.json
+install: Vagrantfile
 	vagrant up --provision
-	vagrant halt # docker without sudo
+	vagrant halt # for docker without sudo
 
 Vagrantfile:
 	vagrant init
 
-vagrant.json: vagrant.sample.json
-	cp $< $@
-
 validate:
 	vagrant validate
 
-deps/$(shell id -un)/dotfiles: deps
-	[ ! -d $@ ] \
-		&& git clone git@github.com:$(shell id -un)/dotfiles.git $@ \
-		|| (git -C $@ fetch -p && git -C $@ pull origin $$(git -C $@ symbolic-ref --short HEAD))
+deps/dotfiles: deps
+	[ ! -e $@ ] && (test -e ~/dotfiles && ln -sfnv $_ $@ || mkdir $@)
 
 deps:
 	test -d $@ || mkdir $@
 
 clean:
+	rm -rf deps
+
+wreck:
 	vagrant destroy --force
-	rm vagrant.json
+	$(MAKE) clean

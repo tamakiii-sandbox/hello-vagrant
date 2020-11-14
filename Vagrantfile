@@ -2,9 +2,12 @@
 # vi: set ft=ruby :
 # frozen_string_literal: true
 
-require 'json'
-
-json = JSON.load(File.open(ENV['JSON_FILE'] || 'vagrant.json'))
+HOST_PORT_HTTP = (ENV['HOST_PORT_HTTP'] || 80).to_i
+HOST_PORT_HTTPS = (ENV['HOST_PORT_HTTPS'] || 443).to_i
+HOST_PORT_MYSQL = (ENV['HOST_PORT_MYSQL'] || 3306).to_i
+VM_MEMORY = (ENV['VM_MEMORY'] || 2048).to_i
+SYNCED_FOLDER = ENV['SYNCED_FOLDER'] || '.'
+SYNCED_FOLDER_GUEST = ENV['SYNCED_FOLDER_GUEST'] || '/mnt/shared'
 
 # All Vagrant configuration is done below. The "2" in Vagrant.configure
 # configures the configuration version (we support older styles for
@@ -29,11 +32,9 @@ Vagrant.configure('2') do |config|
   # accessing "localhost:8080" will access port 80 on the guest machine.
   # NOTE: This will enable public access to the opened port
   # config.vm.network 'forwarded_port', guest: 80, host: HOST_PORT
-  json['network']&.each do |conf|
-    type = conf['type'] || 'forwarded_port'
-    host_ip = conf['host_ip'] || '0.0.0.0'
-    config.vm.network type, guest: conf['guest'], host: conf['host'], host_ip: host_ip
-  end
+  config.vm.network 'forwarded_port', guest: HOST_PORT_HTTP, host: 80
+  config.vm.network 'forwarded_port', guest: HOST_PORT_HTTPS, host: 443
+  config.vm.network 'forwarded_port', guest: HOST_PORT_MYSQL, host: 3306
 
   # Create a forwarded port mapping which allows access to a specific port
   # within the machine from a port on the host machine and only allow access
@@ -53,11 +54,7 @@ Vagrant.configure('2') do |config|
   # the path on the host to the actual folder. The second argument is
   # the path on the guest to mount the folder. And the optional third
   # argument is a set of non-required options.
-  json['synced_folder']&.each do |conf|
-    owner = conf['owner'] || 'vagrant'
-    group = conf['group'] || 'vagrant'
-    config.vm.synced_folder conf['host'], conf['guest'], owner: owner, group: group
-  end
+  config.vm.synced_folder SYNCED_FOLDER, SYNCED_FOLDER_GUEST, owner: 'vagrant', group: 'vagrant'
 
   # Provider-specific configuration so you can fine-tune various
   # backing providers for Vagrant. These expose provider-specific options.
@@ -67,15 +64,16 @@ Vagrant.configure('2') do |config|
     vb.gui = false
 
     # Customize the amount of memory on the VM:
-    vb.memory = (json['virtualbox']['memory'] || 2048).to_i
+    vb.memory = VM_MEMORY
   end
 
   # View the documentation for the provider you are using for more
   # information on available options.
-  json['provision']&.each do |conf|
-    type = conf['type'] || 'file'
-    config.vm.provision type, source: conf['source'], destination: conf['destination']
-  end
+  config.vm.provision 'shell', inline: 'rm -rf /home/vagrant/dotfiles'
+  config.vm.provision 'file', source: './deps/dotfiles', destination: '/home/vagrant/dotfiles'
+
+  # config.vm.provision 'shell', inline: 'mv /tmp/dotfiles /home/vagrant/dotfiles'
+  # config.vm.provision 'file', source: './deps/dotfiles', destination: '/tmp/dotfiles'
 
   # Enable provisioning with a shell script. Additional provisioners such as
   # Ansible, Chef, Docker, Puppet and Salt are also available. Please see the
@@ -91,7 +89,11 @@ Vagrant.configure('2') do |config|
 
   config.vm.provision 'shell', inline: <<-SHELL
     set -ex
-    test -f /home/vagrant/dotfiles/install.sh && $_ || true
-    test -f /home/vagrant/dotfiles/Makefile && make -C $(dirname $_) install test || true
+    test -f /home/vagrant/dotfiles/install.sh && sudo -i -u vagrant $_ || true
+    test -f /home/vagrant/dotfiles/Makefile && sudo -i -u vagrant make -C $(dirname $_) install test || true
   SHELL
+
+  # config.vm.provision 'shell', inline: <<-SHELL
+  #   git config --global github.accesstoken
+  # SHELL
 end
