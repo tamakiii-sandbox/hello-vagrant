@@ -1,0 +1,30 @@
+{
+  "variables": {
+
+  },
+  "builders": [
+    {
+      "type": "vagrant",
+      "communicator": "ssh",
+      "source_path": "hashicorp/bionic64",
+      "provider": "virtualbox",
+      "add_force": true
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "file",
+      "source": "./install",
+      "destination": "/tmp/install"
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "sudo make -C /tmp/install install test"
+      ]
+    }
+  ],
+  "post-processors": [
+    
+  ]
+}
