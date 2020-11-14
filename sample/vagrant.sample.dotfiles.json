@@ -1,8 +1,8 @@
 {
-  "synced_folder": [
+  "provision": [
     {
-      "host": "./sample/dotfiles",
-      "guest": "/home/vagrant/dotfiles"
+      "source": "./sample/dotfiles",
+      "destination": "/home/vagrant/dotfiles"
     }
   ]
 }

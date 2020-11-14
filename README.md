@@ -17,3 +17,13 @@ make clean
 make deps/$(id -un)/dotfiles
 ls -la deps/$(id -un)/dotfiles
 ```
+```json
+{
+  "provision": [
+    {
+      "source": "./deps/$(id -un)/dotfiles",
+      "destination": "/home/vagrant/dotfiles"
+    }
+  ]
+}
+```
