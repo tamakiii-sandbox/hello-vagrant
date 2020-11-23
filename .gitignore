@@ -1,0 +1,5 @@
+/.vagrant/
+/.env
+/deps/
+/dist/
+/output-vagrant/
